@@ -46,7 +46,7 @@ jobs:
         with:
           images: |
             name=ghcr.io/${{ github.repository }},enable=true
-            name=mercool/imagorvideo,enable=${{ github.repository == 'D-mercool/imagorvideo' }}
+            name=mercoo1/imagorvideo,enable=${{ github.repository == 'D-mercool/imagorvideo' }}
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
