@@ -2,15 +2,16 @@ package imagorvideo
 
 import (
 	"context"
+	"io"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/cshum/imagor"
 	"github.com/cshum/imagor/imagorpath"
 	"github.com/cshum/imagorvideo/ffmpeg"
 	"github.com/gabriel-vasile/mimetype"
 	"go.uber.org/zap"
-	"io"
-	"strconv"
-	"strings"
-	"time"
 )
 
 // Processor for imagorvideo that implements imagor.Processor interface
@@ -78,8 +79,8 @@ func (p *Processor) Process(ctx context.Context, in *imagor.Blob, params imagorp
 	var filters imagorpath.Filters
 	var mime = mimetype.Detect(in.Sniff())
 	if typ := mime.String(); !strings.HasPrefix(typ, "video/") &&
-		!strings.HasPrefix(typ, "audio/") {
-		// forward identical for non video nor audio
+		!strings.HasPrefix(typ, "audio/") && !isTS(string(in.Sniff()), typ) {
+		// forward identical for non video nor audio or .ts
 		err = imagor.ErrForward{Params: params}
 		out = in
 		return
@@ -182,6 +183,12 @@ func (p *Processor) Process(ctx context.Context, in *imagor.Blob, params imagorp
 	}
 	err = imagor.ErrForward{Params: params}
 	return
+}
+
+func isTS(sniffData string, mime string) bool {
+	return strings.HasSuffix(strings.ToLower(sniffData), ".ts") ||
+		mime == "video/mp2t" ||
+		mime == "application/octet-stream" && (len(sniffData) > 4 && sniffData[0] == 0x47)
 }
 
 // Metadata imagorvideo metadata
